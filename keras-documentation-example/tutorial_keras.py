@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # Para apagar imagens corrompidas
 num_skipped = 0
 for folder_name in ("Cat", "Dog"):
-    folder_path = os.path.join("PetImages", folder_name)
+    folder_path = os.path.join("keras-documentation-example\\PetImages", folder_name)
     for fname in os.listdir(folder_path):
         fpath = os.path.join(folder_path, fname)
         try:
@@ -35,7 +35,7 @@ image_size = (50, 50)
 batch_size = 32
 
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "PetImages",
+    "keras-documentation-example\\PetImages",
     validation_split=0.2,
     subset="training",
     seed=1337,
@@ -43,7 +43,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size,
 )
 val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "PetImages",
+    "keras-documentation-example\\PetImages",
     validation_split=0.2,
     subset="validation",
     seed=1337,
