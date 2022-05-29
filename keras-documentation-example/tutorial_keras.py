@@ -1,8 +1,9 @@
 # https://keras.io/examples/vision/image_classification_from_scratch/
 # https://www.youtube.com/watch?v=dFdMyUbtKM4
 import tensorflow as tf
+import cv2
 from tensorflow import keras
-from tensorflow.keras import layers
+from keras import layers
 import os
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'

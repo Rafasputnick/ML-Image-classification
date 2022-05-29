@@ -6,8 +6,6 @@ from matplotlib import pyplot
 from keras.datasets import cifar10
 from keras.models import Sequential
 
-
-
 # load train and test dataset
 def load_dataset():
 	# load dataset
@@ -31,7 +29,11 @@ def prep_pixels(train, test):
 # define cnn model
 def define_model():
 	model = Sequential()
-	# ...
+	model.add(keras.layers.Flatten(input_shape=[28, 28]))
+	model.add(keras.layers.Dense(300, activation="relu"))
+	model.add(keras.layers.Dense(100, activation="relu"))
+	model.add(keras.layers.Dense(10, activation="softmax"))
+	model.summary()
 	return model
 
 
@@ -93,10 +95,19 @@ def run_test_harness():
 
 
 
-run_test_harness()
+# run_test_harness()
 
 
+dataset_url = "https://storage.googleapis.com/download.tensorflow.org/example_images/flower_photos.tgz"
+data_dir = keras.utils.get_file(
+    origin=dataset_url, fname="flower_photos", untar=True
+)
 
+dataset = keras.preprocessing.image_dataset_from_directory(
+    data_dir, image_size=(180, 180), batch_size=64
+)
+
+print(type(dataset))
 
 
 
