@@ -12,6 +12,7 @@ Run these commands in command-line
 ``` bash
  pip install matplotlib
  pip install tensorflow
+ pip install pandas
 ```
 
 Now install dataset from this [link](https://www.kaggle.com/competitions/dog-breed-identification/data)
