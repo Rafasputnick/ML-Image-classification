@@ -3,10 +3,10 @@ from os.path import exists, getsize
 from organizador import contruir_estrutura
 
 if (exists("dt_treino") == False) or getsize("dt_treino") == 0 or getsize("dt_treino/affenpinscher") == 0:
-    contruir_estrutura("dt_treino", "dataset/train/")
+    contruir_estrutura("dt_treino", "train/")
 
 # if (exists("dt_validacao") == False) or getsize("dt_validacao") == 0 or getsize("dt_validacao/affenpinscher") == 0:
-#     contruir_estrutura("dt_validacao", "dataset/test/")    
+#     contruir_estrutura("dt_validacao", "test/")    
 
 image_size = (224, 224)
 # quantidade de exempplos de treino que serao usados em 1 iteraçao

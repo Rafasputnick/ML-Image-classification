@@ -15,6 +15,7 @@ __pycache__/
 .Python
 build/
 keras-documentation-example/Petimages
+dog-breed-identification/
 dataset/test
 dataset/train
 dataset/labels.csv

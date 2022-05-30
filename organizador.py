@@ -6,7 +6,12 @@ import shutil
 
 def contruir_estrutura(nova_pasta_origem, origem):
 
-    etiquetas_csv = pd.read_csv("dataset/labels.csv")
+    if os.path.exists("dataset/dog-breed-identification") == True:
+        origem = os.path.join("dataset/dog-breed-identification",origem)
+        etiquetas_csv = pd.read_csv("dataset/dog-breed-identification/labels.csv")
+    else:
+        origem = os.path.join("dataset",origem)
+        etiquetas_csv = pd.read_csv("dataset/labels.csv")
     caminho_dt_treino = origem
 
     nome_arquivos = [caminho_dt_treino + nome_arquivo + ".jpg" for nome_arquivo in etiquetas_csv["id"]]
