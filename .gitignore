@@ -18,6 +18,8 @@ keras-documentation-example/Petimages
 dataset/test
 dataset/train
 dataset/labels.csv
+dt_treino/
+dt_validacao/
 exemplo_prof.py
 dataset/sample_submission.csv
 dog-breed-identification.zip
