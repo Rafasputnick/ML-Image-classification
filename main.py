@@ -5,14 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from tensorflow import keras
 from genericpath import exists, getsize
 from keras import layers
-from keras.layers import (Conv2D, Dense, Dropout, Flatten, Input, MaxPooling2D,
-                          Rescaling, ZeroPadding2D)
-from keras.losses import categorical_crossentropy
-from keras.models import Sequential
-from keras.preprocessing.image import (ImageDataGenerator, img_to_array,
-                                       load_img)
+from keras.layers import Conv2D, Dense, Dropout, Flatten, MaxPooling2D
+
 from organizador import contruir_estrutura, ler_racas
 
 tf.config.threading.set_intra_op_parallelism_threads(4)
@@ -60,11 +57,11 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 )
 
 # aumenta a variabilidade do dataset fazendo algumas alterações aleatorias
-aumentar_dataset = keras.Sequential(
+aumentar_dataset = tf.keras.Sequential(
     [
         layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.5),
-        layers.RandomZoom(0.5),
+        layers.RandomRotation(0.2),
+        layers.RandomZoom(0.2),
     ]
 )
 
@@ -101,11 +98,11 @@ def make_model(input_shape):
 
         x = Conv2D(128, 3, activation='relu')(x)
         x = MaxPooling2D()(x)
-        x = Dropout(0.5)(x)
+        x = Dropout(0.2)(x)
 
         x = Flatten()(x)
         x = Dense(500, activation='relu')(x)
-        x = Dropout(0.5)(x)
+        x = Dropout(0.2)(x)
 
         outputs = layers.Dense(120, activation="softmax")(x)
         return keras.Model(inputs, outputs)
@@ -183,53 +180,53 @@ loss = historico.history['loss']
 val_loss = historico.history['val_loss']
 epochs_range = range(epochs)
 
-plt.gcf().clear()
-plt.figure(figsize = (15, 8))
+# plt.gcf().clear()
+# plt.figure(figsize = (15, 8))
 
-plt.subplot(1, 2, 1)
-plt.title('Training and Validation Accuracy')
-plt.plot(epochs_range, accuracy, label = 'Training Accuracy')
-plt.plot(epochs_range, val_accuracy, label = 'Validation Accuracy')
-plt.legend(loc = 'lower right')
+# plt.subplot(1, 2, 1)
+# plt.title('Training and Validation Accuracy')
+# plt.plot(epochs_range, accuracy, label = 'Training Accuracy')
+# plt.plot(epochs_range, val_accuracy, label = 'Validation Accuracy')
+# plt.legend(loc = 'lower right')
 
-plt.subplot(1, 2, 2)
-plt.title('Training and Validation Loss')
-plt.plot(epochs_range, loss, label = 'Training Loss')
-plt.plot(epochs_range, val_loss, label = 'Validation Loss')
-plt.legend(loc = 'lower right')
+# plt.subplot(1, 2, 2)
+# plt.title('Training and Validation Loss')
+# plt.plot(epochs_range, loss, label = 'Training Loss')
+# plt.plot(epochs_range, val_loss, label = 'Validation Loss')
+# plt.legend(loc = 'lower right')
 
-plt.show()
-
-
-dataset_test_loss, dataset_test_accuracy = model.evaluate(val_ds)
-
-print('Dataset Test Loss:     %s' % dataset_test_loss)
-print('Dataset Test Accuracy: %s' % dataset_test_accuracy)
+# plt.show()
 
 
-def plot_dataset_predictions(dataset):
+# dataset_test_loss, dataset_test_accuracy = model.evaluate(val_ds)
 
-    features, labels = val_ds.as_numpy_iterator().next()
+# print('Dataset Test Loss:     %s' % dataset_test_loss)
+# print('Dataset Test Accuracy: %s' % dataset_test_accuracy)
 
-    predictions = model.predict_on_batch(features).flatten()
-    # predictions = tf.where(predictions < 0.5, 0, 1)
 
-    print('Labels:      %s' % labels[0])
-    # print('Index:      %s' % labels[0].index(1))
-    print('Predictions: %s' % predictions.numpy())
+# def plot_dataset_predictions(dataset):
 
-    plt.gcf().clear()
-    plt.figure(figsize = (15, 15))
+#     features, labels = val_ds.as_numpy_iterator().next()
 
-    for i in range(9):
+#     predictions = model.predict_on_batch(features).flatten()
+#     # predictions = tf.where(predictions < 0.5, 0, 1)
 
-        plt.subplot(3, 3, i + 1)
-        plt.axis('off')
+#     print('Labels:      %s' % labels[0])
+#     # print('Index:      %s' % labels[0].index(1))
+#     print('Predictions: %s' % predictions.numpy())
 
-        plt.imshow(features[i].astype('uint8'))
-        plt.title(racas[predictions[i]])
+#     plt.gcf().clear()
+#     plt.figure(figsize = (15, 15))
 
-plot_dataset_predictions(train_ds)
+#     for i in range(9):
+
+#         plt.subplot(3, 3, i + 1)
+#         plt.axis('off')
+
+#         plt.imshow(features[i].astype('uint8'))
+#         plt.title(racas[predictions[i]])
+
+# plot_dataset_predictions(train_ds)
 
 model.save("model_folder")
 
@@ -241,8 +238,7 @@ def predict(image_file):
     image = tf.keras.preprocessing.image.img_to_array(image)
     image = tf.expand_dims(image, 0)
 
-    # prediction = model.predict(image)[0][0]
-    prediction = model.predict(image)
+    prediction = model.predict(image)[0][0]
     print()
 
 
