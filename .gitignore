@@ -26,6 +26,9 @@ dataset/sample_submission.csv
 dog-breed-identification.zip
 keras-documentation-example
 1.jpg
+sample.py
+test.py
+model_folder/
 PI.py
 SLA.py
 teste.py
