@@ -1,11 +1,16 @@
 import os
 import discord
+from decouple import config
 from discord.ext import commands
 # from dotenv import load_dotenv
 
 # load_dotenv()
 
-bot_token = os.getenv('TOKEN')
+# local
+# bot_token = os.getenv('TOKEN')
+
+# heroku
+bot_token = config('TOKEN')
 
 # client = discord.Client()
 client = commands.Bot("$")
