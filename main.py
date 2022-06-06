@@ -26,15 +26,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 seed = 12335234
 
 # Hiperparametros - 1
-batch_size = 64
-epochs = 1000
+batch_size = 32
+epochs = 10
 learning_rate = 1e-4
 
 # Fazer treinamento
 train = False
 
 # Imagem para testar
-image_teste = 'corgi.jpg'
+image_teste = 'validation/corgi2.jpg'
 
 # Tratamento de falha
 
@@ -47,8 +47,8 @@ error_recover = False
 epoch_carregada = 0
 
 # Hiperparametros - 2
-image_width = 40
-image_height = 40
+image_width = 220
+image_height = 220
 image_color_channel = 1
 image_size = (image_width, image_height)
 image_shape = image_size + (image_color_channel,)
@@ -56,16 +56,6 @@ image_shape = image_size + (image_color_channel,)
 racas = [
     "affenpinscher",
     "afghan_hound",
-    "african_hunting_dog",
-    "airedale",
-    "american_staffordshire_terrier",
-    "appenzeller",
-    "australian_terrier",
-    "basenji",
-    "basset",
-    "beagle",
-    "bedlington_terrier",
-    "bernese_mountain_dog",
     "black-and-tan_coonhound",
     "blenheim_spaniel",
     "bloodhound",
@@ -130,20 +120,21 @@ if (train):
             ),
             aumentar_dataset,
 
-            Conv2D(32, 5, activation='relu', padding='same'),
-            Conv2D(32, 5, activation='relu', padding='same'),
+            Conv2D(16, 3, activation='relu', padding='same'),
             MaxPooling2D(),
-            Dropout(.25),
-            Conv2D(64, 3, activation='relu'),
-            Conv2D(64, 3, activation='relu'),
+            Dropout(.2),
+            Conv2D(32, 5, activation='relu'),
             MaxPooling2D(),
-            Dropout(.25),
+            Dropout(.2),
+            Conv2D(64, 3, activation='relu', padding='same'),
+            MaxPooling2D(),
+            Dropout(.2),
 
             Flatten(),
-            Dense(256, activation = 'relu'),
-            Dropout(.5),
+            Dense(112, activation = 'relu'),
+            Dropout(.3),
 
-            Dense(20, activation = 'softmax')
+            Dense(10, activation = 'softmax')
         ])
         return model
 
@@ -155,7 +146,7 @@ if (train):
     model.summary()
 
     callbacks = [
-        #keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=25),
+        #keras.callbacks.EarlyStopping(monitor='val_accuracy', mode='max', min_delta=1),
         keras.callbacks.ModelCheckpoint(diretorio_checkpoint + "/cp_{epoch}.h5", mode="max", monitor="val_accuracy", save_best_only=True),
         CustomCallback()
     ]
@@ -194,8 +185,9 @@ modelo_salvo = tf.keras.models.load_model('model_folder')
 #salvar_h5_model = modelo_salvo.save("model_upload.h5")
 
 
-def predict(image_file):
-    image = converter_imagem(image_file, image_size)
+def predict(imagem_file):
+    print(imagem_file)
+    image = converter_imagem(imagem_file, image_size)
     image = tf.convert_to_tensor(image, dtype=tf.float32)
     image = tf.keras.preprocessing.image.img_to_array(image)
     image = tf.expand_dims(image, 0)
