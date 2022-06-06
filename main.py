@@ -17,7 +17,7 @@ from custom_callback import CustomCallback
 from genericpath import exists, getsize
 from keras import layers
 from keras.layers import (Conv2D, Dense, Dropout, Flatten, MaxPooling2D,
-                          Rescaling)
+                          Rescaling, GlobalAveragePooling2D)
 from tensorflow import keras
 
 from organizador import contruir_estrutura, ler_racas
@@ -25,7 +25,7 @@ from organizador import contruir_estrutura, ler_racas
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 batch_size = 32
-epochs = 300
+epochs = 50
 learning_rate = 1e-4
 seed = 11111
 
@@ -124,17 +124,16 @@ def make_model(input_shape):
         ),
         aumentar_dataset,
 
-        Conv2D(32, 9, activation='relu', padding='same'),
+        Conv2D(32, 2, activation='relu', padding='same'),
         MaxPooling2D(),
-        Dropout(.25),
-        Conv2D(64, 6, activation='relu'),
-        Conv2D(64, 4, activation='relu', padding='same'),
+        Conv2D(64, 2, activation='relu', padding='same'),
         MaxPooling2D(),
+        GlobalAveragePooling2D(),
         Dropout(.25),
 
         Flatten(),
-        Dense(500, activation = 'relu'),
-        Dropout(.5),
+        Dense(512, activation = 'relu'),
+        Dropout(.15),
 
         Dense(20, activation = 'softmax')
     ])
