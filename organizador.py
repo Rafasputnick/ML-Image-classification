@@ -1,6 +1,7 @@
 import math
 import os
 import shutil
+from tkinter.messagebox import NO
 
 import numpy as np
 import pandas as pd
@@ -22,53 +23,69 @@ def ler_racas():
     return list(np.unique(etiquetas))
 
 
-def contruir_estrutura():
+def contruir_estrutura(racas = None):
     origem, etiquetas_csv = carregar_dataset()
     
     etiquetas = etiquetas_csv["breed"].to_numpy()
 
-    racas = np.unique(etiquetas)
+    if racas is None:
+        racas = np.unique(etiquetas)
+    
     cachorro_raca_geral = {}
-
     for raca in racas:
         cachorro_raca_geral[raca] = etiquetas_csv.loc[etiquetas_csv['breed'] == raca]['id'].to_numpy()
     
-    cachorro_raca_treino = {}
-    cachorro_raca_validacao = {}
-
-    for raca in racas:
-        quantidade_total = len(cachorro_raca_geral[raca])
-        quantidade_treino = math.floor(quantidade_total * 0.8)
-
-        cachorro_raca_treino[raca] = cachorro_raca_geral[raca][0:quantidade_treino]
-        cachorro_raca_validacao[raca] = cachorro_raca_geral[raca][quantidade_treino:]
-
-    # cria a pasta dt_treino para o novo dataset organizado por raças
-    if not os.path.exists("dt_treino"):
-        os.mkdir("dt_treino")
-
-    # cria a pasta dt_validacao para o novo dataset organizado por raças
-    if not os.path.exists("dt_validacao"):
-        os.mkdir("dt_validacao")
-
+    if not os.path.exists("class_dataset"):
+        os.mkdir("class_dataset")
+    
     # cria as pastas de cada raca
     for raca in racas:
-        pasta_raca_treino = os.path.join("dt_treino", raca)
-        pasta_raca_validacao = os.path.join("dt_validacao", raca)
+        pasta_raca = os.path.join("class_dataset", raca)
 
-        if not os.path.exists(pasta_raca_treino):
-            os.mkdir(pasta_raca_treino)
-        
-        if not os.path.exists(pasta_raca_validacao):
-            os.mkdir(pasta_raca_validacao)
+        if not os.path.exists(pasta_raca):
+            os.mkdir(pasta_raca)
 
-    for raca in racas:
-        for id_imagem in cachorro_raca_treino[raca]:
+        for id_imagem in cachorro_raca_geral[raca]:
             endereco_imagem = f"{origem}train/{id_imagem}.jpg"
-            pasta_raca = f"dt_treino/{raca}"
+            pasta_raca = f"class_dataset/{raca}"
             shutil.move(endereco_imagem, pasta_raca)
+
+    # cachorro_raca_treino = {}
+    # cachorro_raca_validacao = {}
+
+    # for raca in racas:
+    #     quantidade_total = len(cachorro_raca_geral[raca])
+    #     quantidade_treino = math.floor(quantidade_total * 0.8)
+
+    #     cachorro_raca_treino[raca] = cachorro_raca_geral[raca][0:quantidade_treino]
+    #     cachorro_raca_validacao[raca] = cachorro_raca_geral[raca][quantidade_treino:]
+
+    # # cria a pasta dt_treino para o novo dataset organizado por raças
+    # if not os.path.exists("dt_treino"):
+    #     os.mkdir("dt_treino")
+
+    # # cria a pasta dt_validacao para o novo dataset organizado por raças
+    # if not os.path.exists("dt_validacao"):
+    #     os.mkdir("dt_validacao")
+
+    # # cria as pastas de cada raca
+    # for raca in racas:
+    #     pasta_raca_treino = os.path.join("dt_treino", raca)
+    #     pasta_raca_validacao = os.path.join("dt_validacao", raca)
+
+    #     if not os.path.exists(pasta_raca_treino):
+    #         os.mkdir(pasta_raca_treino)
         
-        for id_imagem in cachorro_raca_validacao[raca]:
-            endereco_imagem = f"{origem}train/{id_imagem}.jpg"
-            pasta_raca = f"dt_validacao/{raca}"
-            shutil.move(endereco_imagem, pasta_raca)
+    #     if not os.path.exists(pasta_raca_validacao):
+    #         os.mkdir(pasta_raca_validacao)
+
+    # for raca in racas:
+    #     for id_imagem in cachorro_raca_treino[raca]:
+    #         endereco_imagem = f"{origem}train/{id_imagem}.jpg"
+    #         pasta_raca = f"dt_treino/{raca}"
+    #         shutil.move(endereco_imagem, pasta_raca)
+        
+    #     for id_imagem in cachorro_raca_validacao[raca]:
+    #         endereco_imagem = f"{origem}train/{id_imagem}.jpg"
+    #         pasta_raca = f"dt_validacao/{raca}"
+    #         shutil.move(endereco_imagem, pasta_raca)
