@@ -22,3 +22,8 @@ def plot_grafico(historico, tipo):
     plt.legend()
     #plt.show()
     plt.savefig(f"{tipo}_epochs_loss.png")
+    plt.figure(0).clear()
+    plt.figure(1).clear()
+    plt.close()
+    plt.cla()
+    plt.clf()

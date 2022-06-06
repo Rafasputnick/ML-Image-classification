@@ -3,8 +3,11 @@ import os
 import shutil
 from tkinter.messagebox import NO
 
+import cv2
 import numpy as np
 import pandas as pd
+import tensorflow as tf
+
 
 def carregar_dataset():
     if os.path.exists("dataset/dog-breed-identification"):
@@ -89,3 +92,34 @@ def contruir_estrutura(racas = None):
     #         endereco_imagem = f"{origem}train/{id_imagem}.jpg"
     #         pasta_raca = f"dt_validacao/{raca}"
     #         shutil.move(endereco_imagem, pasta_raca)
+
+
+def converter_imagens(diretorios):
+    for diretorio in diretorios:
+        diretorio_rel = os.path.join('class_dataset', diretorio)
+
+        arquivos = next(os.walk(diretorio_rel), (None, None, []))[2]
+        for arquivo in arquivos:
+            nome_diretorio = os.path.join(diretorio_rel, arquivo)
+            imagem = cv2.imread(nome_diretorio)
+            imagem = tratar_imagem(imagem)
+            cv2.imwrite(nome_diretorio, imagem)
+
+def converter_imagem(diretorio, dim):
+    imagem = cv2.imread(diretorio)
+    imagem = tratar_imagem(imagem)
+    cv2.imwrite("imagem_trata.jpg", imagem)
+
+    #imagem = cv2.resize(imagem, dim, cv2.INTER_NEAREST)
+    imagem = tf.keras.preprocessing.image.load_img("imagem_trata.jpg", target_size = dim, color_mode='grayscale')
+    
+    return imagem
+
+def tratar_imagem(imagem):
+
+    imagem_gray = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
+    imagem_blur = cv2.GaussianBlur(imagem_gray, (5,5), 0)
+
+    sobelxy = cv2.Sobel(src=imagem_blur, ddepth=cv2.CV_64F, dx=1, dy=1, ksize=5)
+
+    return sobelxy

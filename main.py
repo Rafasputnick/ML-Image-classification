@@ -20,24 +20,38 @@ from keras.layers import (Conv2D, Dense, Dropout, Flatten, MaxPooling2D,
                           Rescaling, GlobalAveragePooling2D)
 from tensorflow import keras
 
-from organizador import contruir_estrutura, ler_racas
+from organizador import contruir_estrutura, converter_imagem, converter_imagens, ler_racas
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+seed = 12335234
 
-batch_size = 32
-epochs = 50
+# Hiperparametros - 1
+batch_size = 64
+epochs = 1000
 learning_rate = 1e-4
-seed = 11111
 
-# hiperparametros
-image_width = 30
-image_height = 30
-image_color_channel = 1
-image_size = (image_width, image_height)
-image_shape = image_size + (image_color_channel,)
+# Fazer treinamento
+train = False
+
+# Imagem para testar
+image_teste = 'corgi.jpg'
+
+# Tratamento de falha
 
 # diretorio do checkpoint
 diretorio_checkpoint = "G:\checkpoint"
+
+# Caso houver erro
+error_recover = False
+# Epoch do checkpoint
+epoch_carregada = 0
+
+# Hiperparametros - 2
+image_width = 40
+image_height = 40
+image_color_channel = 1
+image_size = (image_width, image_height)
+image_shape = image_size + (image_color_channel,)
 
 racas = [
     "affenpinscher",
@@ -62,148 +76,131 @@ racas = [
     "cardigan"
 ]
 
-if (exists("class_dataset") == False) or getsize("class_dataset") == 0 or getsize("class_dataset/affenpinscher") == 0:
-    contruir_estrutura(racas)
+if (train):
 
-dataset_treino = tf.keras.preprocessing.image_dataset_from_directory(
-    "class_dataset",
-    image_size=image_size,
-    batch_size=batch_size,
-    color_mode='grayscale',
-    label_mode='categorical',
-    labels='inferred',
-    class_names=racas,
-    shuffle=True,
-    subset='training',
-    validation_split=0.2,
-    seed=seed
-)
+    if (exists("class_dataset") == False) or getsize("class_dataset") == 0 or getsize("class_dataset/affenpinscher") == 0:
+        contruir_estrutura(racas)
+        converter_imagens(racas)
 
-dataset_validacao = tf.keras.preprocessing.image_dataset_from_directory(
-    "class_dataset",
-    image_size=image_size,
-    batch_size=batch_size,
-    color_mode='grayscale',
-    label_mode='categorical',
-    labels='inferred',
-    class_names=racas,
-    shuffle=True,
-    subset='validation',
-    validation_split=0.2,
-    seed=seed
-)
+    dataset_treino = tf.keras.preprocessing.image_dataset_from_directory(
+        "class_dataset",
+        image_size=image_size,
+        batch_size=batch_size,
+        color_mode='grayscale',
+        label_mode='categorical',
+        labels='inferred',
+        class_names=racas,
+        shuffle=True,
+        subset='training',
+        validation_split=0.2,
+        seed=seed
+    )
 
-# val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-#     "class_dataset",
-#     image_size=image_size,
-#     batch_size=batch_size,
-#     color_mode='grayscale',
-#     label_mode='categorical',
-#     labels='inferred',
-#     class_names=racas,
-#     shuffle=True
-# )
+    dataset_validacao = tf.keras.preprocessing.image_dataset_from_directory(
+        "class_dataset",
+        image_size=image_size,
+        batch_size=batch_size,
+        color_mode='grayscale',
+        label_mode='categorical',
+        labels='inferred',
+        class_names=racas,
+        shuffle=True,
+        subset='validation',
+        validation_split=0.2,
+        seed=seed
+    )
 
-# aumenta a variabilidade do dataset fazendo algumas alterações aleatorias
-aumentar_dataset = tf.keras.Sequential(
-    [
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.3),
-        layers.RandomZoom(0.3),
-    ]
-)
+    # aumenta a variabilidade do dataset fazendo algumas alterações aleatorias
+    aumentar_dataset = tf.keras.Sequential(
+        [
+            layers.RandomFlip("horizontal"),
+            layers.RandomRotation(0.2),
+            layers.RandomZoom(0.2),
+        ]
+    )
 
-dataset_treino = dataset_treino.prefetch(buffer_size=32)
-# val_ds = val_ds.prefetch(buffer_size=32)
+    dataset_treino = dataset_treino.prefetch(buffer_size=32)
+    dataset_validacao = dataset_validacao.prefetch(buffer_size=32)
 
-def make_model(input_shape):    
-    model = tf.keras.models.Sequential([
-        Rescaling(
-            1./ 255.0,
-            input_shape = input_shape
-        ),
-        aumentar_dataset,
+    def make_model(input_shape):    
+        model = tf.keras.models.Sequential([
+            Rescaling(
+                1./ 255.0,
+                input_shape = input_shape
+            ),
+            aumentar_dataset,
 
-        Conv2D(32, 2, activation='relu', padding='same'),
-        MaxPooling2D(),
-        Conv2D(64, 2, activation='relu', padding='same'),
-        MaxPooling2D(),
-        GlobalAveragePooling2D(),
-        Dropout(.25),
+            Conv2D(32, 5, activation='relu', padding='same'),
+            Conv2D(32, 5, activation='relu', padding='same'),
+            MaxPooling2D(),
+            Dropout(.25),
+            Conv2D(64, 3, activation='relu'),
+            Conv2D(64, 3, activation='relu'),
+            MaxPooling2D(),
+            Dropout(.25),
 
-        Flatten(),
-        Dense(512, activation = 'relu'),
-        Dropout(.15),
+            Flatten(),
+            Dense(256, activation = 'relu'),
+            Dropout(.5),
 
-        Dense(20, activation = 'softmax')
-    ])
-    return model
+            Dense(20, activation = 'softmax')
+        ])
+        return model
 
-try:
-    model = tf.keras.models.load_model('model_folder')
-except:
-    model = make_model(image_shape)
-
-model.summary()
-
-callbacks = [
-    #keras.callbacks.EarlyStopping(monitor = 'loss', patience = 3),
-    keras.callbacks.ModelCheckpoint(diretorio_checkpoint + "/cp_{epoch}.h5", mode="max", monitor="val_loss", save_best_only=True),
-    CustomCallback()
-]
-
-model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate),
-    loss=tf.keras.losses.CategoricalCrossentropy(),
-    metrics=["accuracy"],
-)
-
-# Precisa instalar o Graphviz, para rodar a linha abaixo
-# só necessário rodar quando alterar o modelo
-#keras.utils.plot_model(model, show_shapes=True)
-
-retry = True
-error = False
-
-total_of_retry = 0
-epoch_carregada = 0
-while(retry):
-    retry = False
     try:
-        if error:
-            model.load_weights(diretorio_checkpoint + "/cp_" + epoch_carregada + ".h5")
-            total_of_retry = 0
-            error = False
-            
-        historico = model.fit(dataset_treino, shuffle=True, epochs=epochs, callbacks=callbacks, validation_data=dataset_validacao)
-        model.save("model_folder")
-    except Exception as e:
-        logging.error(e)
-        retry = error = True
-        epochs = epochs - custom_callback.epoch_atual
-        epoch_carregada = custom_callback.epoch_atual - total_of_retry
-        total_of_retry += 1
+        model = tf.keras.models.load_model('model_folder')
+    except:
+        model = make_model(image_shape)
 
-utilidade.plot_grafico(historico.history, "atual")
-historico_longo = json.load(open('train_history/history.json', 'r'))
-if len(historico_longo.keys()) > 0:
-    for key in historico.history.keys():
-        historico_longo[key].extend(historico.history[key])
-else:
-    historico_longo = historico.history
+    model.summary()
 
-utilidade.plot_grafico(historico_longo, "longo")
-json.dump(historico_longo, open('train_history/history.json', 'w'), indent=4)
+    callbacks = [
+        #keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=25),
+        keras.callbacks.ModelCheckpoint(diretorio_checkpoint + "/cp_{epoch}.h5", mode="max", monitor="val_accuracy", save_best_only=True),
+        CustomCallback()
+    ]
+
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate),
+        loss=tf.keras.losses.CategoricalCrossentropy(),
+        metrics=["accuracy"],
+    )
+
+    # Precisa instalar o Graphviz, para rodar a linha abaixo
+    # só necessário rodar quando alterar o modelo
+    #keras.utils.plot_model(model, show_shapes=True)
+
+
+    retry = True
+    if error_recover:
+        model.load_weights(diretorio_checkpoint + "/cp_" + epoch_carregada + ".h5")
+        error = False
+        
+    historico = model.fit(dataset_treino, epochs=epochs, callbacks=callbacks, validation_data=dataset_validacao)
+    model.save("model_folder")
+
+    utilidade.plot_grafico(historico.history, "atual")
+    historico_longo = json.load(open('train_history/history.json', 'r'))
+    if len(historico_longo.keys()) > 0:
+        for key in historico.history.keys():
+            historico_longo[key].extend(historico.history[key])
+    else:
+        historico_longo = historico.history
+
+    utilidade.plot_grafico(historico_longo, "longo")
+    json.dump(historico_longo, open('train_history/history.json', 'w'), indent=4)
 
 modelo_salvo = tf.keras.models.load_model('model_folder')
+#salvar_h5_model = modelo_salvo.save("model_upload.h5")
+
 
 def predict(image_file):
-
-    image = tf.keras.preprocessing.image.load_img(image_file, target_size = image_size, color_mode='grayscale')
+    image = converter_imagem(image_file, image_size)
+    image = tf.convert_to_tensor(image, dtype=tf.float32)
     image = tf.keras.preprocessing.image.img_to_array(image)
     image = tf.expand_dims(image, 0)
 
-    prediction = model.predict(image)
+    prediction = modelo_salvo.predict(image)
     for i in range(len(racas)):
         print(f"Prediction: {racas[i]:>30}| {prediction[0][i] * 100}")
     print(f"---------------------------------------------------------------")
@@ -222,11 +219,11 @@ def predict_ramdom():
     image = tf.keras.preprocessing.image.load_img("dataset/test/" + nome_imagem, target_size = image_size)
     image = tf.keras.preprocessing.image.img_to_array(image)
     image = tf.expand_dims(image, 0)
-
+    
     # prediction = model.predict(image)[0][0]
     prediction = model.predict(image)
     print()
 
-predict('corgi2.jpg')
+predict(image_teste)
 # predict_url('Imagem_selecionada', 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Black-Magic-Big-Boy.jpg')
 # predict_ramdom()
